@@ -1,0 +1,30 @@
+openapi: 3.1.0
+
+info:
+  title: Emarket
+  description: 'Một website thương mại điện tử nơi người dùng có thể mua các sản phầm mà người dùng khác bán, hoặc bán sản phẩm của chính mình.'
+  version: 1.0.0
+  contact:
+    name: Phạm Minh Nguyên
+    email: 21020084@vnu.edu.vn
+
+servers:
+  - url: localhost:8080
+    description: Máy chủ chưa triển khai.
+
+tags:
+  - name: auth
+    description: Các thao tác phục vụ việc xác thực người dùng.
+  - name: user
+    description: Các thao tác với tài khoản, dành cho tất cả tài khoản người dùng trên hệ thống.
+  - name: seller
+    description: Các thao tác phục vụ việc thống kê và quản lý bán hàng, chỉ dành cho các tài khoản Người bán.
+  - name: catalog
+    description: Các thao tác phục vụ việc xem danh mục sản phẩm.
+  - name: product
+    description: Các thao tác với sản phẩm.
+  - name: order
+    description: Các thao tác với đơn hàng.
+  - name: review
+    description: Các thao tác phục vụ việc đánh giá sản phẩm.
+
