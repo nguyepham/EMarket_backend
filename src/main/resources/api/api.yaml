@@ -28,3 +28,36 @@ tags:
   - name: review
     description: Các thao tác phục vụ việc đánh giá sản phẩm.
 
+components:
+  schemas:
+    User:
+      type: object
+      description: Thông tin về một người dùng, có trong tất cả tài khoản trong hệ thống.
+      properties:
+        id:
+          type: string
+          description: Id của tài khoản.
+        username:
+          type: string
+          description: Tên đăng nhập của tài khoản.
+        password:
+          type: string
+          description: Mật khẩu của tài khoản.
+          format: password
+        firstName:
+          type: string
+          description: Tên của chủ tài khoản.
+        lastName:
+          type: string
+          description: Họ của chủ tài khoản
+        email:
+          type: string
+          description: Địa chỉ email của chủ tài khoản
+          format: email
+        dob:
+          type: string
+          description: Ngày sinh của chủ tài khoản
+          format: date-time
+        sex:
+          type: string
+          description: Giới tính của chủ tài khoản.
