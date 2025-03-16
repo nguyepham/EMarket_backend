@@ -17,47 +17,681 @@ tags:
     description: Các thao tác phục vụ việc xác thực người dùng.
   - name: user
     description: Các thao tác với tài khoản, dành cho tất cả tài khoản người dùng trên hệ thống.
-  - name: seller
-    description: Các thao tác phục vụ việc thống kê và quản lý bán hàng, chỉ dành cho các tài khoản Người bán.
   - name: catalog
     description: Các thao tác phục vụ việc xem danh mục sản phẩm.
+  - name: item
+    description: Các thao tác với vật phẩm (trong giỏ hàng hoặc đơn hàng).
   - name: product
     description: Các thao tác với sản phẩm.
+  - name: payment
+    description: Các thao tác phục vụ việc thanh toán khi mua hàng.
   - name: order
     description: Các thao tác với đơn hàng.
+  - name: shop
+    description: Các thao tác với cửa hàng.
   - name: review
     description: Các thao tác phục vụ việc đánh giá sản phẩm.
+  - name: address
+    description: Các thao tác với địa chỉ.
 
 components:
   schemas:
+
+    Password:
+      type: object
+      description: Thông tin về mật khẩu của một tài khoản người dùng.
+      required:
+        - text
+        - updatedAt
+      properties:
+        text:
+          type: string
+          maxLength: 60
+          format: password
+          description: Nội dung của mật khẩu.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Thời điểm gần đây nhất mật khẩu đó được thay đổi.
+
+    UserCreate:
+      allOf:
+        - $ref: '#/components/schemas/UserUpdate'
+        - type: object
+          description: Dữ liệu của User trong thao tác CREATE.
+          required:
+            - username
+            - password
+            - address
+          properties:
+            username:
+              type: string
+              maxLength: 36
+              description: Tên đăng nhập của tài khoản.
+            password:
+              $ref: '#/components/schemas/Password'
+              description: Mật khẩu của tài khoản.
+
+    Profile:
+      allOf:
+        - $ref: '#/components/schemas/UserUpdate'
+        - type: object
+          description: Thông tin chi tiết hơn về User.
+          required:
+            - isMerchant
+          properties:
+            isMerchant:
+              type: boolean
+              description: Xác định người dùng này có phải là một Người bán hay không.
+
     User:
       type: object
-      description: Thông tin về một người dùng, có trong tất cả tài khoản trong hệ thống.
+      description: Thông tin về một người dùng trong hệ thống.
+      required:
+        - id
+        - username
       properties:
         id:
-          type: string
+          type: int
           description: Id của tài khoản.
+        imageUrl:
+          type: string
+          description: Đường dẫn đến file ảnh đại diện của tài khoản.
         username:
           type: string
+          maxLength: 36
           description: Tên đăng nhập của tài khoản.
-        password:
-          type: string
-          description: Mật khẩu của tài khoản.
-          format: password
+        profile:
+          $ref: '#/components/schemas/Profile'
+          description: Thông tin chi tiết về tài khoản của người dùng đó.
+
+    UserUpdate:
+      type: object
+      description: Dữ liệu của User trong thao tác UPDATE.
+      properties:
         firstName:
           type: string
+          maxLength: 36
           description: Tên của chủ tài khoản.
         lastName:
           type: string
-          description: Họ của chủ tài khoản
+          maxLength: 36
+          description: Họ của chủ tài khoản.
         email:
           type: string
-          description: Địa chỉ email của chủ tài khoản
+          maxLength: 100
           format: email
-        dob:
-          type: string
-          description: Ngày sinh của chủ tài khoản
-          format: date-time
+          description: Địa chỉ email của chủ tài khoản.
+        age:
+          type: int
+          minimum: 13
+          description: Tuổi của chủ tài khoản.
         sex:
           type: string
+          maxLength: 1
           description: Giới tính của chủ tài khoản.
+        address:
+          $ref: '#/components/schemas/Address'
+          description: Địa chỉ của người dùng đó.
+
+    ProductCreate:
+      allOf:
+        - $ref: '#/components/schemas/ProductUpdate'
+        - type: object
+          description: Dữ liệu của Product trong thao tác CREATE.
+          required:
+            - name
+            - shortDescription
+            - unitPrice
+            - qtyInStock
+            - shopId
+          properties:
+            shopId:
+              type: string
+              description: Id của cửa hàng bán sản phẩm đó.
+
+    ProductDetails:
+      type: object
+      description: Thông tin chi tiết hơn về Product.
+      required:
+        - shortDescription
+        - qtyInStock
+        - shop
+      properties:
+        shortDescription:
+          type: string
+          maxLength: 100
+          description: Mô tả ngắn gọn của sản phầm.
+        description:
+          type: string
+          maxLength: 200
+          description: Mô tả chi tiết của sản phầm.
+        qtyInStock:
+          type: int
+          minimum: 0
+          description: Số lượng sẵn bán của sản phẩm.
+        shop:
+          $ref: '#/components/schemas/Shop'
+          description: Cửa hàng bán sản phẩm đó.
+
+    Product:
+      type: object
+      description: Thông tin về một sản phẩm được bán trên hệ thống.
+      required:
+        - id
+        - name
+        - imageUrl
+        - unitPrice
+      properties:
+        id:
+          type: int
+          description: Id của sản phầm.
+        name:
+          type: string
+          maxLength: 50
+          description: Tên của sản phầm.
+        imageUrl:
+          type: string
+          description: Đường dẫn đến file ảnh của sản phẩm.
+        unitPrice:
+          type: int
+          minimum: 0
+          description: Đơn giá của sản phẩm.
+        details:
+          $ref: '#/components/schemas/ProductDetails'
+          description: Thông tin chi tiết hơn về Product.
+
+    ProductUpdate:
+      type: object
+      description: Dữ liệu của Product trong thao tác UPDATE.
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          description: Tên của sản phầm.
+        shortDescription:
+          type: string
+          maxLength: 100
+          description: Mô tả ngắn gọn của sản phầm.
+        description:
+          type: string
+          description: Mô tả chi tiết của sản phầm.
+        unitPrice:
+          type: int
+          minimum: 0
+          description: Đơn giá của sản phẩm.
+        qtyInStock:
+          type: int
+          minimum: 0
+          description: Số lượng sẵn bán của sản phẩm.
+
+    ItemUpdate:
+      type: object
+      description: Dữ liệu của Item trong thao tác UPDATE.
+      required:
+        - qty
+      properties:
+        qty:
+          type: int
+          minimum: 0
+          description: Số lượng sản phẩm của vật phẩm.
+
+    CartItemCreate:
+      allOf:
+        - $ref: '#/components/schemas/ItemUpdate'
+        - type: object
+          description: Dữ liệu của một vật phẩm mới được thêm vào một giỏ hàng.
+          required:
+            - productId
+            - customerId
+          properties:
+            productId:
+              type: string
+              description: Id của sản phẩm của vật phẩm đó.
+            customerId:
+              type: string
+              description: Id của chủ nhân của giỏ hàng chứa vật phẩm đó.
+
+    OrderItemCreate:
+      allOf:
+        - $ref: '#/components/schemas/ItemUpdate'
+        - type: object
+          description: Dữ liệu của một vật phẩm mới được thêm vào một đơn hàng.
+          required:
+            - productId
+            - orderId
+          properties:
+            productId:
+              type: string
+              description: Id của sản phẩm của vật phẩm đó.
+            orderId:
+              type: string
+              description: Id của đơn hàng chứa vật phẩm đó.
+
+    CartItem:
+      allOf:
+        - $ref: '#/components/schemas/ItemUpdate'
+        - type: object
+          description: Thông tin về một vật phẩm chứa trong một giỏ hàng. Mỗi vật phẩm gồm một hoặc nhiều sản phẩm cùng loại.
+          required:
+            - id
+            - product
+            - customer
+          properties:
+            id:
+              type: int
+              description: Id của vật phẩm.
+            product:
+              $ref: '#/components/schemas/Product'
+              description: Sản phẩm của vật phẩm đó.
+            customer:
+              $ref: '#/components/schemas/User'
+              description: Chủ nhân của giỏ hàng chứa vật phẩm đó.
+
+    OrderItem:
+      allOf:
+        - $ref: '#/components/schemas/ItemUpdate'
+        - type: object
+          description: Thông tin về một vật phẩm chứa trong một đơn hàng. Mỗi vật phẩm gồm một hoặc nhiều sản phẩm cùng loại.
+          required:
+            - id
+            - product
+            - order
+            - purchased
+          properties:
+            id:
+              type: int
+            product:
+              $ref: '#/components/schemas/Product'
+              description: Id của vật phẩm.
+            order:
+              $ref: '#/components/schemas/Order'
+              description: Đơn hàng chứa vật phẩm đó.
+            purchased:
+              type: boolean
+              description: Xác định xem vật phẩm đã được mua thành công hay chưa.
+            purchasedAt:
+              type: string
+              format: date-time
+              description: Thời điểm vật phẩm đó được mua thành công.
+
+    OrderCreate:
+      type: object
+      description: Dữ liệu của Order trong thao tác CREATE.
+      required:
+        - createdAt
+        - customerId
+        - shopId
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          description: Thời điểm đơn hàng được tạo.
+        customerId:
+          type: string
+          description: Id của người mua của đơn hàng đó.
+        shopId:
+          type: string
+          description: Id của cửa hàng bán đơn hàng đó.
+
+    OrderDetails:
+      allOf:
+        - $ref: '#/components/schemas/OrderUpdate'
+        - type: object
+          description: Thông tin về một đơn hàng.
+          required:
+            - createdAt
+            - completedAt
+            - customer
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+              description: Thời điểm đơn hàng được tạo.
+            completedAt:
+              type: string
+              format: date-time
+              description: Thời điểm đơn hàng được hoàn tất.
+            customer:
+              $ref: '#/components/schemas/User'
+              description: Người mua của đơn hàng đó.
+            items:
+              type: array
+              description: Danh sách các vật phẩm trong đơn hàng đó.
+              items:
+                $ref: '#/components/schemas/OrderItem'
+
+    Order:
+      allOf:
+        - $ref: '#/components/schemas/OrderUpdate'
+        - type: object
+          description: Thông tin về một đơn hàng.
+          required:
+            - id
+            - shop
+            - total
+            - previewItem
+          properties:
+            id:
+              type: int
+              description: Id của sản phầm.
+            shop:
+              $ref: '#/components/schemas/Shop'
+              description: Cửa hàng bán đơn hàng đó.
+            total:
+              type: integer
+              format: int64
+              description: Tổng giá trị của đơn hàng đó.
+            previewItem:
+              $ref: '#/components/schemas/OrderItem'
+              description: Thông tin về một vật phẩm bất kỳ trong đơn hàng đó.
+            details:
+              $ref: '#/components/schemas/OrderDetails'
+              description: Thông tin chi tiết hơn về Order.
+
+    OrderUpdate:
+      type: object
+      description: Dữ liệu của Order trong thao tác UPDATE.
+      required:
+        - status
+        - statusUpdatedAt
+        - shipmentAddress
+      properties:
+        status:
+          type: string
+          description: Trạng thái hiện tại của đơn hàng.
+          enum:
+            - CREATED
+            - PAID
+            - SHIPPED
+            - PAYMENT_FAILED
+            - SHIPMENT_FAILED
+            - COMPLETED
+        statusUpdatedAt:
+          type: string
+          format: date-time
+          description: Thời điểm gần nhất trạng thái đơn hàng được cập nhật
+        shipmentAddress:
+          $ref: '#/components/schemas/Address'
+          description: Địa chỉ nhận hàng của đơn hàng đó.
+
+    BusinessPerformance:
+      type: object
+      description: Thông tin về hoạt động kinh doanh của một cửa hàng.
+      properties:
+        averageWeeklyRating:
+          type: number
+          format: BigDecimal
+          minimum: 1
+          description: Số sao trung bình theo tuần của cửa hàng.
+        averageMonthlyRating:
+          type: number
+          format: BigDecimal
+          minimum: 1
+          description: Số sao trung bình theo tháng của cửa hàng.
+        averageQuarterlyRating:
+          type: number
+          format: BigDecimal
+          minimum: 1
+          description: Số sao trung bình theo quý của cửa hàng.
+        averageYearlyRating:
+          type: number
+          format: BigDecimal
+          minimum: 1
+          description: Số sao trung bình theo năm của cửa hàng.
+        averageWeeklySales:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh số trung bình theo tuần của cửa hàng.
+        averageMonthlySales:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh số trung bình theo tháng của cửa hàng.
+        averageQuarterlySales:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh số trung bình theo quý của cửa hàng.
+        averageYearlySales:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh số trung bình theo năm của cửa hàng.
+        averageWeeklyRevenue:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh thu trung bình theo tuần của cửa hàng.
+        averageMonthlyRevenue:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh thu trung bình theo tháng của cửa hàng.
+        averageQuarterlyRevenue:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh thu trung bình theo quý của cửa hàng.
+        averageYearlyRevenue:
+          type: number
+          format: BigDecimal
+          minimum: 0
+          description: Doanh thu trung bình theo năm của cửa hàng.
+        totalWeeklySales:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh số theo tuần của cửa hàng.
+        totalMonthlySales:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh số theo tháng của cửa hàng.
+        totalQuarterlySales:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh số theo quý của cửa hàng.
+        totalYearlySales:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh số theo năm của cửa hàng.
+        totalWeeklyRevenue:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh thu theo tuần của cửa hàng.
+        totalMonthlyRevenue:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh thu theo tháng của cửa hàng.
+        totalQuarterlyRevenue:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh thu theo quý của cửa hàng.
+        totalYearlyRevenue:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Tổng doanh thu theo năm của cửa hàng.
+
+    ShopCreate:
+      allOf:
+        - $ref: '#/components/schemas/ShopUpdate'
+        - type: object
+          description: Dữ liệu của Shop trong thao tác CREATE.
+          required:
+            - ownerId
+          properties:
+            ownerId:
+              type: string
+              description: Id của chủ nhân của cửa hàng đó.
+
+    ShopDetails:
+      type: object
+      description: Thông tin chi tiết hơn về Shop.
+      required:
+        - owner
+        - address
+      properties:
+        owner:
+          $ref: '#/components/schemas/User'
+          description: Chủ nhân của cửa hàng đó.
+        address:
+          $ref: '#/components/schemas/Address'
+          description: Địa chỉ của cửa hàng đó.
+        rating:
+          type: int
+          description: Số sao trung bình của cửa hàng.
+        businessPerformance:
+          $ref: '#/components/schemas/BusinessPerformance'
+          description: Thông tin về hoạt động kinh doanh của cửa hàng đó.
+
+    Shop:
+      type: object
+      description: Thông tin về một cửa hàng.
+      required:
+        - id
+        - imageUrl
+        - name
+      properties:
+        id:
+          type: int
+          description: Id của cửa hàng.
+        imageUrl:
+          type: string
+          description: Đường dẫn đến file ảnh đại diện của cửa hàng.
+        name:
+          type: string
+          description: Tên của cửa hàng đó.
+        shopDetails:
+          $ref: '#/components/schemas/ShopDetails'
+          description: Thông tin chi tiết hơn về Shop.
+
+    ShopUpdate:
+      type: object
+      description: Dữ liệu của Shop trong thao tác UPDATE.
+      properties:
+        name:
+          type: string
+          description: Tên của cửa hàng đó.
+        address:
+          $ref: '#/components/schemas/Address'
+          description: Địa chỉ của cửa hàng đó.
+
+    ReviewCore:
+      type: object
+      description: Dữ liệu lõi của Review.
+      required:
+        - createdAt
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          description: Thời điểm đơn hàng được tạo.
+        rating:
+          type: int
+          minimum: 1
+          maximum: 5
+          description: Số sao của đánh giá.
+        text:
+          type: string
+          description: Nội dung đánh giá (bằng văn bản).
+        imageUrl:
+          type: string
+          description: Đường dẫn đến file ảnh đính kèm trong đánh giá.
+
+    ProductReviewCreate:
+      allOf:
+        - $ref: '#/components/schemas/ReviewCore'
+        - type: object
+          description: Dữ liệu của một đánh giá sản phẩm được tạo mới.
+          required:
+            - customerId
+            - productId
+          properties:
+            customerId:
+              type: string
+              description: Id của người thực hiện đánh giá đó.
+            productId:
+              type: string
+              description: Id của sản phẩm là đối tượng của đánh giá đó.
+
+    ShopReviewCreate:
+      allOf:
+        - $ref: '#/components/schemas/ReviewCore'
+        - type: object
+          description: Dữ liệu của một đánh giá cửa hàng được tạo mới.
+          required:
+            - customerId
+            - shopId
+          properties:
+            customerId:
+              type: string
+              description: Id của người thực hiện đánh giá đó.
+            shopId:
+              type: string
+              description: Id của cửa hàng là đối tượng của đánh giá đó.
+
+    ProductReview:
+      allOf:
+        - $ref: '#/components/schemas/ReviewCore'
+        - type: object
+          description: Thông tin về một đánh giá sản phẩm.
+          required:
+            - id
+            - customer
+            - product
+          properties:
+            id:
+              type: int
+              description: Id của đánh giá.
+            customer:
+              $ref: '#/components/schemas/User'
+              description: Người thực hiện đánh giá đó.
+            product:
+              $ref: '#/components/schemas/Product'
+              description: Sản phẩm là đối tượng của đánh giá đó.
+
+    ShopReview:
+      allOf:
+        - $ref: '#/components/schemas/ReviewCore'
+        - type: object
+          description: Thông tin về một đánh giá cửa hàng.
+          required:
+            - id
+            - customer
+            - shop
+          properties:
+            id:
+              type: int
+              description: Id của đánh giá.
+            customer:
+              $ref: '#/components/schemas/User'
+              description: Người thực hiện đánh giá đó.
+            shop:
+              $ref: '#/components/schemas/Shop'
+              description: Cửa hàng là đối tượng của đánh giá đó.
+
+    Address:
+      type: object
+      description: Thông tin về địa chỉ của một người dùng.
+      required:
+        - province
+        - district
+        - street_and_number
+      properties:
+        province:
+          type: string
+          description: Tên tỉnh/thành phố.
+        district:
+          type: string
+          description: Tên xã/phường/thị trấn.
+        streetAndNumber:
+          type: string
+          description: Tên đường/tuyến phố và số nhà.
