@@ -1,5 +1,12 @@
 CREATE SCHEMA IF NOT EXISTS emarket;
 
+CREATE TABLE IF NOT EXISTS emarket.user (
+    id SERIAL PRIMARY KEY,
+
+    image_url TEXT,
+    username VARCHAR(36) UNIQUE NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS emarket.password (
     id SERIAL PRIMARY KEY,
 
@@ -13,7 +20,7 @@ CREATE TABLE IF NOT EXISTS emarket.password (
 CREATE TABLE IF NOT EXISTS emarket.profile (
     id SERIAL PRIMARY KEY,
 
-    is_merchant BOOLEAN NOT NULL DEFAULT FAULT,
+    is_merchant BOOLEAN NOT NULL,
     first_name VARCHAR(28),
     last_name VARCHAR(28),
     email VARCHAR(100),
@@ -24,11 +31,31 @@ CREATE TABLE IF NOT EXISTS emarket.profile (
         FOREIGN KEY (id) REFERENCES emarket.user(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS emarket.user (
+CREATE TABLE IF NOT EXISTS emarket.shop (
     id SERIAL PRIMARY KEY,
 
     image_url TEXT,
-    username VARCHAR(36) UNIQUE NOT NULL
+    name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS emarket.shop_details (
+    id SERIAL PRIMARY KEY,
+
+    owner_id INT NOT NULL,
+    rating INT,
+
+    CONSTRAINT fk_shop_details_shop
+    FOREIGN KEY (id) REFERENCES emarket.shop(id) ON DELETE CASCADE,
+    CONSTRAINT fk_shop_user
+        FOREIGN KEY (owner_id) REFERENCES emarket.user(id)
+);
+
+CREATE TABLE IF NOT EXISTS emarket.product (
+    id SERIAL PRIMARY KEY,
+
+    name VARCHAR(50) NOT NULL,
+    image_url TEXT,
+    unit_price BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS emarket.product_details (
@@ -40,45 +67,18 @@ CREATE TABLE IF NOT EXISTS emarket.product_details (
     qty_in_stock INT NOT NULL,
 
     CONSTRAINT fk_product_details_product
-        FOREIGN KEY (product_id) REFERENCES emarket.product(id) ON DELETE CASCADE,
+        FOREIGN KEY (id) REFERENCES emarket.product(id) ON DELETE CASCADE,
     CONSTRAINT fk_product_details_shop
         FOREIGN KEY (shop_id) REFERENCES emarket.shop(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS emarket.product (
+CREATE TABLE IF NOT EXISTS emarket.order (
     id SERIAL PRIMARY KEY,
 
-    name VARCHAR(50) NOT NULL,
-    image_url TEXT,
-    unit_price BIGINT NOT NULL
-);
+    shop_id INTEGER NOT NULL,
 
-CREATE TABLE IF NOT EXISTS emarket.cart_item (
-    id SERIAL PRIMARY KEY,
-
-    product_id INTEGER NOT NULL,
-    customer_id INTEGER NOT NULL,
-    qty INT NOT NULL,
-
-    CONSTRAINT fk_cart_item_product
-         FOREIGN KEY (product_id) REFERENCES emarket.product(id) ON DELETE CASCADE,
-    CONSTRAINT fk_cart_item_customer
-        FOREIGN KEY (customer_id) REFERENCES emarket.customer(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS emarket.order_item (
-    id SERIAL PRIMARY KEY,
-
-    product_id INTEGER NOT NULL,
-    order_id INTEGER NOT NULL,
-    purchased BOOLEAN NOT NULL DEFAULT FAULT,
-    purchasedAt TIMESTAMP,
-    qty INT NOT NULL,
-
-    CONSTRAINT fk_order_item_product
-          FOREIGN KEY (product_id) REFERENCES emarket.product(id) ON DELETE CASCADE,
-    CONSTRAINT fk_order_item_order
-        FOREIGN KEY (order_id) REFERENCES emarket.order(id) ON DELETE CASCADE
+    CONSTRAINT fk_order_shop
+        FOREIGN KEY (shop_id) REFERENCES emarket.shop(id)
 );
 
 CREATE TABLE IF NOT EXISTS emarket.order_details (
@@ -90,38 +90,10 @@ CREATE TABLE IF NOT EXISTS emarket.order_details (
     status CHAR(16) NOT NULL,
     status_updated_at TIMESTAMP,
 
-    CONSTRAINT fk_order_customer
-        FOREIGN KEY (customer_id) REFERENCES emarket.customer(id),
     CONSTRAINT fk_order_details_order
-        FOREIGN KEY (id) REFERENCES emarket.order(id)
-);
-
-CREATE TABLE IF NOT EXISTS emarket.order (
-     id SERIAL PRIMARY KEY,
-
-     shop_id INTEGER NOT NULL,
-
-     CONSTRAINT fk_order_shop
-        FOREIGN KEY (shop_id) REFERENCES emarket.shop(id)
-);
-
-CREATE TABLE IF NOT EXISTS emarket.shop_details (
-    id SERIAL PRIMARY KEY,
-
-    owner_id INT NOT NULL,
-    rating INT,
-
-    CONSTRAINT fk_shop_details_shop
-        FOREIGN KEY (id) REFERENCES emarket.shop(id) ON DELETE CASCADE,
-    CONSTRAINT fk_shop_user
-        FOREIGN KEY (owner_id) REFERENCES emarket.user(id)
-);
-
-CREATE TABLE IF NOT EXISTS emarket.shop (
-    id SERIAL PRIMARY KEY,
-
-    image_url TEXT
-    name VARCHAR(50) NOT NULL,
+        FOREIGN KEY (id) REFERENCES emarket.order(id),
+    CONSTRAINT fk_order_customer
+        FOREIGN KEY (customer_id) REFERENCES emarket.user(id)
 );
 
 CREATE TABLE IF NOT EXISTS emarket.business_performance (
@@ -156,6 +128,34 @@ CREATE TABLE IF NOT EXISTS emarket.business_performance (
         FOREIGN KEY (id) REFERENCES emarket.shop(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS emarket.cart_item (
+    id SERIAL PRIMARY KEY,
+
+    product_id INTEGER NOT NULL,
+    customer_id INTEGER NOT NULL,
+    qty INT NOT NULL,
+
+    CONSTRAINT fk_cart_item_product
+         FOREIGN KEY (product_id) REFERENCES emarket.product(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cart_item_customer
+        FOREIGN KEY (customer_id) REFERENCES emarket.user(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS emarket.order_item (
+    id SERIAL PRIMARY KEY,
+
+    product_id INTEGER NOT NULL,
+    order_id INTEGER NOT NULL,
+    purchased BOOLEAN NOT NULL,
+    purchasedAt TIMESTAMP,
+    qty INT NOT NULL,
+
+    CONSTRAINT fk_order_item_product
+          FOREIGN KEY (product_id) REFERENCES emarket.product(id) ON DELETE CASCADE,
+    CONSTRAINT fk_order_item_order
+        FOREIGN KEY (order_id) REFERENCES emarket.order(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS emarket.product_review (
     id SERIAL PRIMARY KEY,
 
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS emarket.product_review (
         FOREIGN KEY (product_id) REFERENCES emarket.product(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS emarket.product_review (
+CREATE TABLE IF NOT EXISTS emarket.shop_review (
     id SERIAL PRIMARY KEY,
 
     customer_id INTEGER NOT NULL,
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS emarket.product_review (
     image_url TEXT,
     text TEXT,
 
-    CONSTRAINT fk_product_review_customer
+    CONSTRAINT fk_shop_review_customer
         FOREIGN KEY (customer_id) REFERENCES emarket.user(id),
     CONSTRAINT fk_shop_review_shop
         FOREIGN KEY (shop_id) REFERENCES emarket.shop(id) ON DELETE CASCADE
