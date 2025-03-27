@@ -9,7 +9,7 @@ info:
     email: 21020084@vnu.edu.vn
 
 servers:
-  - url: localhost:8080
+  - url: localhost:8080/
     description: Máy chủ chưa triển khai.
 
 tags:
@@ -34,8 +34,232 @@ tags:
   - name: address
     description: Các thao tác với địa chỉ.
 
+paths:
+
+  /api/v1/auth/login:
+
+    post:
+      tags:
+        - auth
+      description: Đăng nhập vào hệ thống.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+      responses:
+        200:
+          description: Đăng nhập thành công.
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Mã jwt dùng để xác thực người dùng.
+
+  /api/v1/auth/sign-up:
+
+    post:
+      tags:
+        - auth
+      description: Tạo tài khoản mới.
+      operationId: signUp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        201:
+          description: Tạo tài khoản thành công.
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Thông báo thao tác thành công.
+
+  /api/v1/user/{username}:
+
+    get:
+      tags:
+        - user
+      description: Lấy thông tin về một tài khoản người dùng.
+      operationId: getUser
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Id của tài khoản người dùng.
+      responses:
+        200:
+          description: Lấy thông tin thành công.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    delete:
+      tags:
+        - user
+      description: Xóa tài khoản của người dùng khỏi hệ thống.
+      operationId: deleteUser
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Id của tài khoản người dùng.
+      responses:
+        200:
+          description: Xóa tài khoản thành công.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+                description: Thông báo thao tác thành công.
+
+  /api/v1/user/{username}/details:
+
+    get:
+      tags:
+        - user
+      description: Lấy thông tin chi tiết về một tài khoản người dùng.
+      operationId: getDetails
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Id của tài khoản người dùng.
+      responses:
+        200:
+          description: Lấy thông tin thành công.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+    put:
+      tags:
+        - user
+      description: Cập nhật thông tin người dùng.
+      operationId: updateDetails
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Id của tài khoản người dùng.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        200:
+          description: Cập nhật thông tin thành công.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+
+  /api/v1/user/{username}/details/password:
+
+    put:
+      tags:
+        - user
+      description: Thay đổi mật khẩu của tài khoản.
+      operationId: updatePassword
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Id của tài khoản người dùng.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+      responses:
+        200:
+          description: Thanh đổi mật khẩu thành công.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+                description: Thông báo thao tác thành công.
+
 components:
   schemas:
+
+    ErrorResponse:
+      type: object
+      description: Nội dung phản hồi của một yêu cầu không thành công.
+      properties:
+        errorCode:
+            type: string
+            description: Mã lỗi dễ nhận biết riêng trong hệ thống.
+        message:
+          type: string
+          description: Mô tả dễ hiểu về lỗi gặp phải.
+        httpStatus:
+          type: int
+          description: Mã trạng thái HTTP.
+
+    SuccessResponse:
+      type: object
+      description: Nội dung phản hồi của một yêu cầu thành công.
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Mô tả dễ hiểu về thao tác thành công.
+
+    AuthenticationRequest:
+        type: object
+        description: Thông tin cần thiết để xác thực một người dùng.
+        required:
+            - username
+            - password
+        properties:
+          username:
+            type: string
+            maxLength: 36
+            description: Tên đăng nhập của người dùng.
+          password:
+            type: string
+            maxLength: 60
+            format: password
+            description: Mật khẩu của người dùng.
+
+    UpdatePasswordRequest:
+        type: object
+        description: Thông tin cần thiết để thay đổi mật khẩu của một người dùng.
+        required:
+            - oldPassword
+            - newPassword
+        properties:
+          oldPassword:
+            type: string
+            minLength: 8
+            maxLength: 60
+            format: password
+            description: Mật khẩu cũ của người dùng.
+          newPassword:
+            $ref: '#/components/schemas/Password'
+            description: Mật khẩu mới của người dùng.
 
     Password:
       type: object
@@ -46,6 +270,7 @@ components:
       properties:
         text:
           type: string
+          minLength: 8
           maxLength: 60
           format: password
           description: Nội dung của mật khẩu.
@@ -62,10 +287,12 @@ components:
           required:
             - username
             - password
+            - age
             - address
           properties:
             username:
               type: string
+              minLength: 6
               maxLength: 36
               description: Tên đăng nhập của tài khoản.
             password:
@@ -78,11 +305,16 @@ components:
         - type: object
           description: Thông tin chi tiết hơn về User.
           required:
-            - isMerchant
+            - age
+            - authority
           properties:
-            isMerchant:
-              type: boolean
-              description: Xác định người dùng này có phải là một Người bán hay không.
+            authority:
+              type: string
+              description: Vai trò của người dùng đó trong hệ thống.
+              enum:
+                - ROLE_ADMIN
+                - ROLE_MERCHANT
+                - ROLE_CUSTOMER
 
     User:
       type: object
@@ -99,6 +331,7 @@ components:
           description: Đường dẫn đến file ảnh đại diện của tài khoản.
         username:
           type: string
+          minLength: 6
           maxLength: 36
           description: Tên đăng nhập của tài khoản.
         profile:
@@ -126,10 +359,14 @@ components:
           type: int
           minimum: 13
           description: Tuổi của chủ tài khoản.
-        sex:
+        gender:
           type: string
-          maxLength: 1
           description: Giới tính của chủ tài khoản.
+          enum:
+            - FEMALE
+            - MALE
+            - OTHER
+            - UNKNOWN
         address:
           $ref: '#/components/schemas/Address'
           description: Địa chỉ của người dùng đó.
@@ -684,7 +921,7 @@ components:
       required:
         - province
         - district
-        - street_and_number
+        - streetAndNumber
       properties:
         province:
           type: string

@@ -20,12 +20,12 @@ CREATE TABLE IF NOT EXISTS emarket.password (
 CREATE TABLE IF NOT EXISTS emarket.profile (
     id SERIAL PRIMARY KEY,
 
-    is_merchant BOOLEAN NOT NULL,
+    authority VARCHAR(16) NOT NULL,
     first_name VARCHAR(28),
     last_name VARCHAR(28),
     email VARCHAR(100),
     age INT,
-    sex CHAR(1),
+    gender VARCHAR(7),
 
     CONSTRAINT fk_profile_user
         FOREIGN KEY (id) REFERENCES emarket.user(id) ON DELETE CASCADE
@@ -87,45 +87,13 @@ CREATE TABLE IF NOT EXISTS emarket.order_details (
     customer_id INTEGER NOT NULL,
     created_at TIMESTAMP,
     completed_at TIMESTAMP,
-    status CHAR(16) NOT NULL,
+    status VARCHAR(16) NOT NULL,
     status_updated_at TIMESTAMP,
 
     CONSTRAINT fk_order_details_order
         FOREIGN KEY (id) REFERENCES emarket.order(id),
     CONSTRAINT fk_order_customer
         FOREIGN KEY (customer_id) REFERENCES emarket.user(id)
-);
-
-CREATE TABLE IF NOT EXISTS emarket.business_performance (
-    id SERIAL PRIMARY KEY,
-
-    average_weekly_rating NUMERIC,
-    average_monthly_rating NUMERIC,
-    average_quarterly_rating NUMERIC,
-    average_yearly_rating NUMERIC,
-
-    average_weekly_sales NUMERIC,
-    average_monthly_sales NUMERIC,
-    average_quarterly_sales NUMERIC,
-    average_yearly_sales NUMERIC,
-
-    average_weekly_revenue NUMERIC,
-    average_monthly_revenue NUMERIC,
-    average_quarterly_revenue NUMERIC,
-    average_yearly_revenue NUMERIC,
-
-    total_weekly_sales BIGINT,
-    total_monthly_sales BIGINT,
-    total_quarterly_sales BIGINT,
-    total_yearly_sales BIGINT,
-
-    total_weekly_revenue BIGINT,
-    total_monthly_revenue BIGINT,
-    total_quarterly_revenue BIGINT,
-    total_yearly_revenue BIGINT,
-
-    CONSTRAINT fk_business_performance_shop
-        FOREIGN KEY (id) REFERENCES emarket.shop(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS emarket.cart_item (
