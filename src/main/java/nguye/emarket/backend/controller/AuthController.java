@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import nguye.emarket.backend.api.AuthApi;
 import nguye.emarket.backend.authentication.SuccessfulAuthentication;
 import nguye.emarket.backend.model.AuthenticationRequest;
+import nguye.emarket.backend.model.SuccessResponse;
 import nguye.emarket.backend.model.UserCreate;
 import nguye.emarket.backend.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class AuthController implements AuthApi {
     }
 
     @Override
-    public ResponseEntity<String> login(@Valid @RequestBody AuthenticationRequest payload)
+    public ResponseEntity<SuccessResponse> login(@Valid @RequestBody AuthenticationRequest payload)
             throws AuthenticationException {
 
         String username = payload.getUsername();
@@ -36,12 +37,13 @@ public class AuthController implements AuthApi {
                 (SuccessfulAuthentication) authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password));
 
-        return ResponseEntity.ok(successfulAuthentication.getDetails().toString());
+        SuccessResponse successResponse = new SuccessResponse().text(successfulAuthentication.getDetails().toString());
+        return ResponseEntity.ok(successResponse);
     }
 
     @Override
-    public ResponseEntity<String> signUp (@Valid @RequestBody UserCreate newUser) {
+    public ResponseEntity<SuccessResponse> signUp (@Valid @RequestBody UserCreate newUser) {
         userService.createUser(newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Signed up successfully");
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse().text("Signed up successfully"));
     }
 }

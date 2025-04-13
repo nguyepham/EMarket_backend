@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import nguye.emarket.backend.exception.InvalidJwtException;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -47,8 +48,8 @@ public class JwtHelper {
 
         } catch (JWTVerificationException e) {
             System.out.println("Invalid JWT: " + e.getMessage());
+            throw new InvalidJwtException(e.getMessage());
         }
-        return false;
     }
 
     public String extractUsername(String jwt) {
@@ -64,7 +65,7 @@ public class JwtHelper {
 
         } catch (JWTVerificationException e) {
             System.out.println("Invalid JWT: " + e.getMessage());
+            throw new InvalidJwtException(e.getMessage());
         }
-        return null;
     }
 }

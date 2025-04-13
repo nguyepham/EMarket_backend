@@ -4,8 +4,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.core.AuthenticationException;
+import nguye.emarket.backend.exception.InvalidJwtException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,15 +17,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtHelper jwtHelper;
     private final UserDetailsServiceImpl userDetailsService;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
 
-    public JwtAuthenticationFilter(JwtHelper jwtHelper, UserDetailsServiceImpl userDetailsService) {
+    public JwtAuthenticationFilter(JwtHelper jwtHelper, UserDetailsServiceImpl userDetailsService, AuthenticationEntryPoint authenticationEntryPoint) {
         this.jwtHelper = jwtHelper;
         this.userDetailsService = userDetailsService;
+        this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws AuthenticationException, ServletException, IOException {
+            throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -32,17 +35,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwt = authHeader.substring(7);
-        String username = jwtHelper.extractUsername(jwt);
+        try {
+            String jwt = authHeader.substring(7);
+            String username = jwtHelper.extractUsername(jwt);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            SecurityUser userDetails = (SecurityUser) userDetailsService.loadUserByUsername(username);
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                SecurityUser userDetails = (SecurityUser) userDetailsService.loadUserByUsername(username);
 
-            if (jwtHelper.isTokenValid(userDetails, jwt)) {
-                SuccessfulAuthentication authentication = new SuccessfulAuthentication(userDetails, jwt);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (jwtHelper.isTokenValid(userDetails, jwt)) {
+                    SuccessfulAuthentication authentication = new SuccessfulAuthentication(userDetails, jwt);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
+            filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);
+        catch (InvalidJwtException ex) {
+            authenticationEntryPoint.commence(request, response, ex);
+        }
     }
 }

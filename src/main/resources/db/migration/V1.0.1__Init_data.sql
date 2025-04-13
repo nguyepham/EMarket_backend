@@ -6,9 +6,9 @@ INSERT INTO emarket.user (id, username, image_url) VALUES
 
 -- Insert passwords
 INSERT INTO emarket.password (id, text, updated_at) VALUES
-    (1000, '$2b$12$wWpuvflxLi7SbIT2bcYQkOElPueQMkberbZOyf/PGv2uCBk/PCuLq', NOW()),
-    (2000, '$2b$12$FoTEGsalDG8Z1uFS6KdKMeC1gWWGOpHMmvQFOZ16O41u8JnpD2jOe', NOW()),
-    (3000, '$2a$12$UOnAlNIAZ0zcRJt5t7vGT.UM8k7kOcxUgs7FzL1pAVbSSllINHIsG', NOW());
+    (1000, '$2b$12$NHV0A8e6nz1LCKmLF9mjC.2ZibHkEGIMiY8.lh8c77nxDvNtkUNnW', NOW()),
+    (2000, '$2b$12$EY.Aqv57XBIp5Bim4DDnsO7nZJvbW9ZSOWGxINentNSkyOLrq6t6S', NOW()),
+    (3000, '$2b$12$4kmKPKZYNh1SCT9sjLHW4.b0.h/J2GCRACq5FHLR1rRJOkgFkVDTu', NOW());
 
 -- Insert profiles
 INSERT INTO emarket.profile (id, age, authority) VALUES
