@@ -28,8 +28,8 @@ public class RestApiExceptionHandler {
         // ex.printStackTrace();
         ErrorResponse error = new ErrorResponse()
                 .errorCode(AppError.GENERIC_ERROR.getErrorCode())
-                .message(ex.getMessage())
-                .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                .statusText(ex.getMessage())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value());
 
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -38,8 +38,8 @@ public class RestApiExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex) {
         ErrorResponse error = new ErrorResponse()
                 .errorCode(AppError.BAD_CREDENTIALS.getErrorCode())
-                .message(ex.getMessage())
-                .httpStatus(HttpStatus.UNAUTHORIZED.value());
+                .statusText(ex.getMessage())
+                .status(HttpStatus.UNAUTHORIZED.value());
 
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
@@ -48,8 +48,8 @@ public class RestApiExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResourceAlreadyExistException(ResourceAlreadyExistException ex) {
         ErrorResponse error = new ErrorResponse()
                 .errorCode(AppError.RESOURCE_ALREADY_EXIST.getErrorCode())
-                .message(ex.getMessage())
-                .httpStatus(HttpStatus.CONFLICT.value());
+                .statusText(ex.getMessage())
+                .status(HttpStatus.CONFLICT.value());
 
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
@@ -58,8 +58,8 @@ public class RestApiExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
         ErrorResponse error = new ErrorResponse()
                 .errorCode(AppError.RESOURCE_NOT_FOUND.getErrorCode())
-                .message(ex.getMessage())
-                .httpStatus(HttpStatus.NOT_FOUND.value());
+                .statusText(ex.getMessage())
+                .status(HttpStatus.NOT_FOUND.value());
 
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
@@ -68,8 +68,8 @@ public class RestApiExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         ErrorResponse error = new ErrorResponse()
                 .errorCode(AppError.ACCESS_DENIED.getErrorCode())
-                .message(ex.getMessage())
-                .httpStatus(HttpStatus.FORBIDDEN.value());
+                .statusText(ex.getMessage())
+                .status(HttpStatus.FORBIDDEN.value());
 
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
