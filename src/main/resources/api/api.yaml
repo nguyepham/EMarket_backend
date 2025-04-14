@@ -189,7 +189,41 @@ paths:
               $ref: '#/components/schemas/UpdatePasswordRequest'
       responses:
         200:
-          description: Thanh đổi mật khẩu thành công.
+          description: Thay đổi mật khẩu thành công.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+                description: Thông báo thao tác thành công.
+
+  /api/v1/user/{username}/details/profile-picture:
+
+    post:
+      tags:
+        - user
+      description: Cập nhật ảnh đại diện của tài khoản.
+      operationId: updateProfilePicture
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Id của tài khoản người dùng.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Tệp ảnh đại diện được tải lên.
+      responses:
+        200:
+          description: Cập nhật ảnh đại diện thành công.
           content:
             application/json:
               schema:

@@ -73,4 +73,14 @@ public class RestApiExceptionHandler {
 
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<ErrorResponse> handleFileUploadException(FileUploadException ex) {
+        ErrorResponse error = new ErrorResponse()
+                .errorCode(AppError.FILE_UPLOAD_FAILED.getErrorCode())
+                .statusText(ex.getMessage())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value());
+
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

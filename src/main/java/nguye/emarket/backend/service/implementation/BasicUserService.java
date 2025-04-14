@@ -7,27 +7,35 @@ import nguye.emarket.backend.entity.PasswordEntity;
 import nguye.emarket.backend.entity.ProfileEntity;
 import nguye.emarket.backend.entity.UserAddressEntity;
 import nguye.emarket.backend.entity.UserEntity;
-import nguye.emarket.backend.exception.AccessDeniedException;
-import nguye.emarket.backend.exception.ResourceAlreadyExistException;
-import nguye.emarket.backend.exception.ResourceNotFoundException;
-import nguye.emarket.backend.exception.ResourceType;
+import nguye.emarket.backend.exception.*;
 import nguye.emarket.backend.model.*;
 import nguye.emarket.backend.repository.PasswordRepository;
 import nguye.emarket.backend.repository.ProfileRepository;
 import nguye.emarket.backend.repository.UserAddressRepository;
 import nguye.emarket.backend.repository.UserRepository;
 import nguye.emarket.backend.service.UserService;
+import nguye.emarket.backend.util.FileUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class BasicUserService implements UserService {
+
+    private final String UPLOAD_DIR = "uploads/avatars/";
 
     private final UserRepository userRepository;
     private final PasswordRepository passwordRepository;
@@ -197,6 +205,35 @@ public class BasicUserService implements UserService {
         passwordRepository.save(passwordEntity);
     }
 
+    @Transactional
+    @Override
+    public String updateProfilePicture(String username, MultipartFile file) throws FileUploadException, IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+
+        if (!securityUser.getUsername().equals(username)) {
+            throw new AccessDeniedException();
+        }
+
+        String imageUrl = null;
+        try {
+            UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
+                    () -> new ResourceNotFoundException(ResourceType.USER));
+
+            String filename = UUID.randomUUID() + "-" + username + "-avatar" + FileUtil.getFileExtension(
+                    Objects.requireNonNull(file.getOriginalFilename()));
+            Path filepath = Paths.get(UPLOAD_DIR, filename);
+            Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
+
+            imageUrl = "/avatars/" + filename;
+            userEntity.setImageUrl(imageUrl);
+            userRepository.save(userEntity);
+        } catch (IOException e) {
+            throw new FileUploadException(file.getOriginalFilename());
+        }
+        return imageUrl;
+    }
+
     @Override
     public void deleteUser(String username) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -210,22 +247,4 @@ public class BasicUserService implements UserService {
             userRepository.deleteByUsername(username);
         }
     }
-
-
-//    private void getProfileEntity(UserCreate newUser, UserEntity userEntity) {
-//        ProfileEntity profileEntity =
-//        if (newUser.getFirstName() != null) {
-//            profileEntity.setFirstName(newUser.getFirstName());
-//        }
-//        if (newUser.getLastName() != null) {
-//            profileEntity.setLastName(newUser.getLastName());
-//        }
-//        if (newUser.getEmail() != null) {
-//            profileEntity.setEmail(newUser.getEmail());
-//        }
-//        if (newUser.getGender() != null) {
-//            profileEntity.setGender(newUser.getGender());
-//        }
-//        return profileEntity;
-//    }
 }

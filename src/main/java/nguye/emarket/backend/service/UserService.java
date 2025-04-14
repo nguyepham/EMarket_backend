@@ -1,6 +1,10 @@
 package nguye.emarket.backend.service;
 
+import nguye.emarket.backend.exception.FileUploadException;
 import nguye.emarket.backend.model.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 public interface UserService {
 
@@ -13,6 +17,8 @@ public interface UserService {
     UserUpdate updateDetails(String username, UserUpdate details);
 
     void updatePassword(String username, UpdatePasswordRequest request);
+
+    String updateProfilePicture(String username, MultipartFile file) throws FileUploadException, IOException;
 
     void deleteUser(String username);
 }

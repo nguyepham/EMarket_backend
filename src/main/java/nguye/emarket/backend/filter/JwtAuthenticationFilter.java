@@ -1,12 +1,16 @@
-package nguye.emarket.backend.authentication;
+package nguye.emarket.backend.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import nguye.emarket.backend.authentication.JwtHelper;
+import nguye.emarket.backend.authentication.SecurityUser;
+import nguye.emarket.backend.authentication.SuccessfulAuthentication;
+import nguye.emarket.backend.authentication.UserDetailsServiceImpl;
 import nguye.emarket.backend.exception.InvalidJwtException;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,12 +21,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtHelper jwtHelper;
     private final UserDetailsServiceImpl userDetailsService;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
 
-    public JwtAuthenticationFilter(JwtHelper jwtHelper, UserDetailsServiceImpl userDetailsService, AuthenticationEntryPoint authenticationEntryPoint) {
+    public JwtAuthenticationFilter(JwtHelper jwtHelper, UserDetailsServiceImpl userDetailsService) {
         this.jwtHelper = jwtHelper;
         this.userDetailsService = userDetailsService;
-        this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
     @Override
@@ -50,7 +52,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         }
         catch (InvalidJwtException ex) {
-            authenticationEntryPoint.commence(request, response, ex);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(String.format("{ \"statusText\": \"%s\" }", ex.getMessage()));
         }
     }
 }
