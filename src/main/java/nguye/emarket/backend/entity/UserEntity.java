@@ -24,10 +24,10 @@ public class UserEntity {
     @Column(name = "USERNAME", nullable = false, updatable = false, unique = true, length = 36)
     private String username;
 
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<CartItemEntity> cartItems = new HashSet<>();
 
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<OrderEntity> orders = new HashSet<>();
 
     protected UserEntity() {

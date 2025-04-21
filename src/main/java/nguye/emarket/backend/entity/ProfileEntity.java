@@ -12,7 +12,7 @@ public class ProfileEntity {
     @Id
     private int id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId
     @JoinColumn(name = "ID")
     private UserEntity user;

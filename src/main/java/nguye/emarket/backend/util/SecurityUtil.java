@@ -1,26 +1,31 @@
-package nguye.emarket.backend.authentication;
+package nguye.emarket.backend.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import nguye.emarket.backend.authentication.SecurityUser;
+import nguye.emarket.backend.exception.AccessDeniedException;
 import nguye.emarket.backend.exception.InvalidJwtException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 @Component
-public class JwtHelper {
+public class SecurityUtil {
 
-    static final long EXPIRATION_TIME = 60 * 60 * 12 * 1000;
+    private static final long EXPIRATION_TIME = 60 * 60 * 12 * 1000;
 
-    private final Algorithm algorithm = Algorithm.HMAC256(System.getenv("JWT_SECRET_KEY"));
+    private static final Algorithm algorithm = Algorithm.HMAC256(System.getenv("JWT_SECRET_KEY"));
 
-    public JwtHelper() {}
+    public SecurityUtil() {}
 
     // Generate a signed JWT token
-    public String generateToken(SecurityUser userDetails)  {
+    public static String generateToken(SecurityUser userDetails)  {
 
         return JWT.create()
                 .withIssuer("EMarket e-commerce platform")
@@ -34,7 +39,7 @@ public class JwtHelper {
                 .sign(algorithm);
     }
 
-    public boolean isTokenValid(SecurityUser userDetails, String jwt) {
+    public static boolean isTokenValid(SecurityUser userDetails, String jwt) {
         try {
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer("EMarket e-commerce platform")
@@ -52,7 +57,7 @@ public class JwtHelper {
         }
     }
 
-    public String extractUsername(String jwt) {
+    public static String extractUsername(String jwt) {
         try {
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer("EMarket e-commerce platform")
@@ -66,6 +71,16 @@ public class JwtHelper {
         } catch (JWTVerificationException e) {
             System.out.println("Invalid JWT: " + e.getMessage());
             throw new InvalidJwtException(e.getMessage());
+        }
+    }
+
+    public static void authenticateUser(String username) {
+        System.out.println("Authenticating user: " + username);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+        if (!securityUser.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                && !securityUser.getUsername().equals(username)) {
+            throw new AccessDeniedException();
         }
     }
 }

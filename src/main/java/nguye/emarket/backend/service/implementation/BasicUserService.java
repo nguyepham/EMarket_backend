@@ -2,22 +2,18 @@ package nguye.emarket.backend.service.implementation;
 
 import nguye.emarket.backend.assembler.ProfileAssembler;
 import nguye.emarket.backend.assembler.UserAssembler;
-import nguye.emarket.backend.authentication.SecurityUser;
+import nguye.emarket.backend.entity.AddressEntity;
 import nguye.emarket.backend.entity.PasswordEntity;
 import nguye.emarket.backend.entity.ProfileEntity;
-import nguye.emarket.backend.entity.UserAddressEntity;
 import nguye.emarket.backend.entity.UserEntity;
 import nguye.emarket.backend.exception.*;
 import nguye.emarket.backend.model.*;
+import nguye.emarket.backend.repository.AddressRepository;
 import nguye.emarket.backend.repository.PasswordRepository;
 import nguye.emarket.backend.repository.ProfileRepository;
-import nguye.emarket.backend.repository.UserAddressRepository;
 import nguye.emarket.backend.repository.UserRepository;
 import nguye.emarket.backend.service.UserService;
 import nguye.emarket.backend.util.FileUtil;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,26 +28,30 @@ import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
 
+import static nguye.emarket.backend.util.FileUtil.AVATAR_UPLOAD_DIR;
+import static nguye.emarket.backend.util.FileUtil.UPLOAD_DIR;
+
 @Service
 public class BasicUserService implements UserService {
 
-    private final String UPLOAD_DIR = "uploads/avatars/";
-
     private final UserRepository userRepository;
     private final PasswordRepository passwordRepository;
-    private final UserAddressRepository userAddressRepository;
+    private final AddressRepository addressRepository;
     private final ProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserAssembler userAssembler;
     private final ProfileAssembler profileAssembler;
 
-    public BasicUserService(UserRepository userRepository, PasswordRepository passwordRepository,
-                            UserAddressRepository userAddressRepository,
-                            ProfileRepository profileRepository, PasswordEncoder passwordEncoder, UserAssembler userAssembler,
+    public BasicUserService(UserRepository userRepository,
+                            PasswordRepository passwordRepository,
+                            AddressRepository addressRepository,
+                            ProfileRepository profileRepository,
+                            PasswordEncoder passwordEncoder,
+                            UserAssembler userAssembler,
                             ProfileAssembler profileAssembler) {
         this.userRepository = userRepository;
         this.passwordRepository = passwordRepository;
-        this.userAddressRepository = userAddressRepository;
+        this.addressRepository = addressRepository;
         this.profileRepository = profileRepository;
         this.passwordEncoder = passwordEncoder;
         this.userAssembler = userAssembler;
@@ -65,16 +65,16 @@ public class BasicUserService implements UserService {
         if (userRepository.existsByUsername(newUser.getUsername())) {
             throw new ResourceAlreadyExistException(ResourceType.USERNAME);
         }
-        if (profileRepository.existsByEmail(newUser.getEmail())) {
+        if (newUser.getEmail() != null && profileRepository.existsByEmail(newUser.getEmail())) {
             throw new ResourceAlreadyExistException(ResourceType.EMAIL);
         }
 
         UserEntity userEntity = new UserEntity(newUser.getUsername());
         PasswordEntity passwordEntity = new PasswordEntity(
                 userEntity,
-                passwordEncoder.encode(newUser.getPassword().getText()),
+                newUser.getPassword().getText(),
                 new Timestamp(newUser.getPassword().getUpdatedAt().getTime()));
-        UserAddressEntity userAddressEntity = new UserAddressEntity(
+        AddressEntity addressEntity = new AddressEntity(
                 userEntity,
                 newUser.getAddress().getProvince(),
                 newUser.getAddress().getDistrict(),
@@ -84,7 +84,7 @@ public class BasicUserService implements UserService {
 
         userRepository.save(userEntity);
         passwordRepository.save(passwordEntity);
-        userAddressRepository.save(userAddressEntity);
+        addressRepository.save(addressEntity);
         profileRepository.save(profileEntity);
     }
 
@@ -97,35 +97,30 @@ public class BasicUserService implements UserService {
 
     @Override
     public Profile getDetails(String username) {
+
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException(ResourceType.USER));
         int userId = userEntity.getId();
 
         ProfileEntity profileEntity = profileRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException(ResourceType.PROFILE));
-        UserAddressEntity userAddressEntity = userAddressRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException(ResourceType.USER_ADDRESS));
+        AddressEntity addressEntity = addressRepository.findById(userId).orElseThrow(
+                () -> new ResourceNotFoundException(ResourceType.ADDRESS));
 
-        return profileAssembler.toModel(profileEntity, userAddressEntity);
+        return profileAssembler.toModel(profileEntity, addressEntity);
     }
 
     @Transactional
     @Override
     public UserUpdate updateDetails(String username, UserUpdate details) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
-        if (!securityUser.getUsername().equals(username)) {
-            throw new AccessDeniedException();
-        }
-
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException(ResourceType.USER));
         int userId = userEntity.getId();
         ProfileEntity profileEntity = profileRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException(ResourceType.PROFILE));
-        UserAddressEntity userAddressEntity = userAddressRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException(ResourceType.USER_ADDRESS));
+        AddressEntity addressEntity = addressRepository.findById(userId).orElseThrow(
+                () -> new ResourceNotFoundException(ResourceType.ADDRESS));
         UserUpdate newDetails = new UserUpdate();
 
         if (details.getFirstName() != null) {
@@ -164,19 +159,19 @@ public class BasicUserService implements UserService {
         }
 
         if (details.getAddress() != null) {
-            userAddressEntity.setProvince(details.getAddress().getProvince());
-            userAddressEntity.setDistrict(details.getAddress().getDistrict());
-            userAddressEntity.setStreetAndNumber(details.getAddress().getStreetAndNumber());
+            addressEntity.setProvince(details.getAddress().getProvince());
+            addressEntity.setDistrict(details.getAddress().getDistrict());
+            addressEntity.setStreetAndNumber(details.getAddress().getStreetAndNumber());
 
             Address userAddress = new Address()
-                    .province(userAddressEntity.getProvince())
-                    .district(userAddressEntity.getDistrict())
-                    .streetAndNumber(userAddressEntity.getStreetAndNumber());
+                    .province(addressEntity.getProvince())
+                    .district(addressEntity.getDistrict())
+                    .streetAndNumber(addressEntity.getStreetAndNumber());
             newDetails.setAddress(userAddress);
         }
 
         profileRepository.save(profileEntity);
-        userAddressRepository.save(userAddressEntity);
+        addressRepository.save(addressEntity);
 
         return newDetails;
     }
@@ -184,12 +179,7 @@ public class BasicUserService implements UserService {
     @Transactional
     @Override
     public void updatePassword(String username, UpdatePasswordRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
 
-        if (!securityUser.getUsername().equals(username)) {
-            throw new AccessDeniedException();
-        }
         UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException(ResourceType.USER));
         int userId = userEntity.getId();
@@ -207,22 +197,25 @@ public class BasicUserService implements UserService {
 
     @Transactional
     @Override
-    public String updateProfilePicture(String username, MultipartFile file) throws FileUploadException, IOException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
-
-        if (!securityUser.getUsername().equals(username)) {
-            throw new AccessDeniedException();
-        }
+    public String updateAvatar(String username, MultipartFile file) throws FileUploadException {
 
         String imageUrl = null;
+        UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
+                () -> new ResourceNotFoundException(ResourceType.USER));
         try {
-            UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
-                    () -> new ResourceNotFoundException(ResourceType.USER));
+            String oldImageUrl = userEntity.getImageUrl();
+            if (oldImageUrl != null && !oldImageUrl.isBlank()) {
+                Path oldFilePath = Paths.get(AVATAR_UPLOAD_DIR, Paths.get(oldImageUrl).getFileName().toString());
+                try {
+                    Files.deleteIfExists(oldFilePath);
+                } catch (IOException e) {
+                    throw new FileUploadException(file.getOriginalFilename());
+                }
+            }
 
             String filename = UUID.randomUUID() + "-" + username + "-avatar" + FileUtil.getFileExtension(
                     Objects.requireNonNull(file.getOriginalFilename()));
-            Path filepath = Paths.get(UPLOAD_DIR, filename);
+            Path filepath = Paths.get(AVATAR_UPLOAD_DIR, filename);
             Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
 
             imageUrl = "/avatars/" + filename;
@@ -234,17 +227,41 @@ public class BasicUserService implements UserService {
         return imageUrl;
     }
 
+    @Transactional
     @Override
     public void deleteUser(String username) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
 
-        if (!securityUser.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                && !securityUser.getUsername().equals(username)) {
-            throw new AccessDeniedException();
+        UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
+                () -> new ResourceNotFoundException(ResourceType.USER));
+        String imageUrl = userEntity.getImageUrl();
+        if (imageUrl != null) {
+            Path filepath = Paths.get(UPLOAD_DIR, imageUrl);
+            try {
+                Files.deleteIfExists(filepath);
+            } catch (IOException e) {
+                throw new ResourceNotFoundException(ResourceType.IMAGE);
+            }
         }
-        if (userRepository.existsByUsername(username)) {
-            userRepository.deleteByUsername(username);
+        userRepository.deleteByUsername(username);
+    }
+
+    @Transactional
+    @Override
+    public void deleteAvatar(String username) {
+
+        UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(
+                () -> new ResourceNotFoundException(ResourceType.USER));
+
+        String imageUrl = userEntity.getImageUrl();
+        if (imageUrl != null) {
+            Path filepath = Paths.get(UPLOAD_DIR, imageUrl);
+            try {
+                Files.deleteIfExists(filepath);
+            } catch (IOException e) {
+                throw new ResourceNotFoundException(ResourceType.IMAGE);
+            }
+            userEntity.setImageUrl(null);
+            userRepository.save(userEntity);
         }
     }
 }

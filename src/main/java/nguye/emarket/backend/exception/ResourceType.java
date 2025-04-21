@@ -7,10 +7,16 @@ public enum ResourceType {
 
     USERNAME("Username"),
     PASSWORD("Password"),
+    IMAGE("Image"),
     EMAIL("Email"),
-    USER_ADDRESS("User address"),
+    ADDRESS("Address"),
     PROFILE("Profile"),
-
+    PRODUCT("Product"),
+    PRODUCT_REVIEW("Product Review"),
+    PRODUCT_REVIEW_IMAGE("Product Review Image"),
+    SELLER_REVIEW("Seller Review"),
+    SELLER_REVIEW_IMAGE("Seller Review Image"),
+    CATEGORY("Category"),
     USER("User"),;
 
     private final String value;

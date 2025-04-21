@@ -1,6 +1,7 @@
 package nguye.emarket.backend.authentication;
 
 import nguye.emarket.backend.exception.BadCredentialsException;
+import nguye.emarket.backend.util.SecurityUtil;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,11 +15,9 @@ import org.springframework.stereotype.Component;
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     private final UserDetailsServiceImpl userDetailsService;
-    private final JwtHelper jwtHelper;
 
-    public CustomAuthenticationProvider(UserDetailsServiceImpl userDetailsService, JwtHelper jwtHelper) {
+    public CustomAuthenticationProvider(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
-        this.jwtHelper = jwtHelper;
     }
 
     @Override
@@ -31,7 +30,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         if (passwordEncoder.matches(password, userDetails.getPassword())) {
-            String jwt = jwtHelper.generateToken(userDetails);
+            String jwt = SecurityUtil.generateToken(userDetails);
 
             SuccessfulAuthentication successfulAuthentication = new SuccessfulAuthentication(userDetails, jwt);
             SecurityContextHolder.getContext().setAuthentication(successfulAuthentication);

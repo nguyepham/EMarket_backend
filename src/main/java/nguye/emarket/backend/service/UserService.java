@@ -18,7 +18,9 @@ public interface UserService {
 
     void updatePassword(String username, UpdatePasswordRequest request);
 
-    String updateProfilePicture(String username, MultipartFile file) throws FileUploadException, IOException;
+    String updateAvatar(String username, MultipartFile file) throws FileUploadException, IOException;
 
     void deleteUser(String username);
+
+    void deleteAvatar(String username);
 }

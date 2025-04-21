@@ -4,11 +4,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import nguye.emarket.backend.authentication.JwtHelper;
 import nguye.emarket.backend.authentication.SecurityUser;
 import nguye.emarket.backend.authentication.SuccessfulAuthentication;
 import nguye.emarket.backend.authentication.UserDetailsServiceImpl;
 import nguye.emarket.backend.exception.InvalidJwtException;
+import nguye.emarket.backend.util.SecurityUtil;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,11 +19,9 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtHelper jwtHelper;
     private final UserDetailsServiceImpl userDetailsService;
 
-    public JwtAuthenticationFilter(JwtHelper jwtHelper, UserDetailsServiceImpl userDetailsService) {
-        this.jwtHelper = jwtHelper;
+    public JwtAuthenticationFilter(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
@@ -39,12 +37,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String jwt = authHeader.substring(7);
-            String username = jwtHelper.extractUsername(jwt);
+            String username = SecurityUtil.extractUsername(jwt);
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 SecurityUser userDetails = (SecurityUser) userDetailsService.loadUserByUsername(username);
 
-                if (jwtHelper.isTokenValid(userDetails, jwt)) {
+                if (SecurityUtil.isTokenValid(userDetails, jwt)) {
                     SuccessfulAuthentication authentication = new SuccessfulAuthentication(userDetails, jwt);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }

@@ -1,8 +1,8 @@
 package nguye.emarket.backend.assembler;
 
 import nguye.emarket.backend.controller.UserController;
+import nguye.emarket.backend.entity.AddressEntity;
 import nguye.emarket.backend.entity.ProfileEntity;
-import nguye.emarket.backend.entity.UserAddressEntity;
 import nguye.emarket.backend.entity.UserEntity;
 import nguye.emarket.backend.exception.ResourceNotFoundException;
 import nguye.emarket.backend.exception.ResourceType;
@@ -26,7 +26,7 @@ public class ProfileAssembler extends
         this.userRepository = userRepository;
     }
 
-    public Profile toModel(ProfileEntity entity, UserAddressEntity userAddressEntity) {
+    public Profile toModel(ProfileEntity entity, AddressEntity addressEntity) {
 
         Profile profile = new Profile(entity.getAge(), Profile.AuthorityEnum.fromValue(entity.getAuthority()));
         UserEntity userEntity = userRepository.findById(entity.getId()).orElseThrow(
@@ -46,9 +46,9 @@ public class ProfileAssembler extends
         }
 
         Address userAddress = new Address()
-                .province(userAddressEntity.getProvince())
-                .district(userAddressEntity.getDistrict())
-                .streetAndNumber(userAddressEntity.getStreetAndNumber());
+                .province(addressEntity.getProvince())
+                .district(addressEntity.getDistrict())
+                .streetAndNumber(addressEntity.getStreetAndNumber());
 
         return profile
                 .address(userAddress)
